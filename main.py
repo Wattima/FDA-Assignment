@@ -66,11 +66,30 @@ Requirements:
     o Apply:
         ▪ Mean replacement
         ▪ Mode replacement
+2. Convert data types:
+    o Price → float
+    o Horsepower → float
+3. Feature engineering:
+    o Create new column: df["city-L/100km"] = 235 / df["city-mpg"]
+4. Apply binning:
+    o Low / Medium / High horsepower
+    o Normalize at least one feature
 
 """
 import numpy as np
-df.replace('?',np.nan, inplace=True)
+df = df.replace('?',np.nan)
 print(df.head(10))
 
-    
+missing_data = df.isnull().sum()
+print("Columns with missing values:")
+print(missing_data[missing_data > 0])
 
+# Select columns for mean replacement(continuos)
+mean_cols = ['normalized-losses', 'horsepower', 'bore', 'stroke', 'peak-rpm']
+
+for col in mean_cols:
+    df[col] = pd.to_numeric(df[col], errors='coerce')
+    df[col].fillna(df[col].mean(), inplace=True)
+
+# Mode replacement for num-of-doors
+df['num-of-doors'].fillna(df['num-of-doors'].mode()[0], inplace=True)
