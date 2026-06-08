@@ -57,7 +57,20 @@ unique_categorical("make", "fuel-type", "aspiration", "body-style", "num-of-door
     o Histogram (price, horsepower)
     o Boxplot (price vs body-style)
     o Correlation heatmap
+Data must be cleaned first!
+
+Requirements:
+1. Handle missing values:
+    o Replace "?" with NaN
+    o Identify missing columns
+    o Apply:
+        ▪ Mean replacement
+        ▪ Mode replacement
 
 """
+import numpy as np
+df.replace('?',np.nan, inplace=True)
+print(df.head(10))
+
     
 
