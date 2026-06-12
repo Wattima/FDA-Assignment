@@ -107,3 +107,45 @@ df["city-L/100km"] = 235 / df["city-mpg"]
     o Low / Medium / High horsepower
     o Normalize at least one feature
 """
+bins = np.linspace(min(df['horsepower']), max(df['horsepower']), 4)
+group_names = ['Low', 'Medium', 'High']
+df['horsepower-binned'] = pd.cut(df['horsepower'], bins, labels=group_names, include_lowest=True)
+print(df['horsepower-binned'].value_counts())
+
+import matplotlib.pyplot as plt
+# Normalizing length
+df['length'] = df['length'] / df['length'].max()
+
+"""
+5. Create visualizations:
+o Histogram (price, horsepower)
+o Boxplot (price vs body-style)
+o Correlation heatmap
+
+"""
+import seaborn as sns
+
+plt.figure(figsize=(14, 5))
+
+# price
+plt.subplot(1, 2, 1) 
+sns.histplot(df['price'], bins=20, color='skyblue', kde=True)
+plt.title('Distribution of Car Prices')
+plt.xlabel('Price ($)')
+plt.ylabel('Count of Cars')
+
+# horsepower
+plt.subplot(1, 2, 2)
+sns.histplot(df['horsepower'], bins=20, color='salmon', kde=True)
+plt.title('Distribution of Horsepower')
+plt.xlabel('Horsepower')
+plt.ylabel('Count of Cars')
+
+# Adjust layout so labels don't overlap and show the plots
+plt.tight_layout()
+
+plt.clf()
+
+plt.figure(figsize=(7, 7))
+sns.boxplot(x='body-style', y='price', data=df)
+plt.show()
