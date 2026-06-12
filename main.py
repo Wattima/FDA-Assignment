@@ -143,9 +143,15 @@ plt.ylabel('Count of Cars')
 
 # Adjust layout so labels don't overlap and show the plots
 plt.tight_layout()
-
 plt.clf()
 
 plt.figure(figsize=(7, 7))
 sns.boxplot(x='body-style', y='price', data=df)
-plt.show()
+plt.clf()
+
+# Heatmap
+# only the columns that hold numbers
+numeric_df = df.corr(numeric_only=True)
+plt.figure(figsize=(12, 10))
+sns.heatmap(numeric_df, cmap="coolwarm", annot=True)
+plt.clf()
