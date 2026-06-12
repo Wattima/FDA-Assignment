@@ -179,13 +179,20 @@ from sklearn.linear_model import LinearRegression
 """
 # Data split
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
-plt.figure(figsize=(6, 4))
-sns.scatterplot(x='engine-size', y='price', data=df)
-plt.title('Exploratory Check: Horsepower vs Price')
+plt.figure(figsize=(8, 5))
+sns.regplot(x='horsepower', y='price', data=df, 
+            scatter_kws={'alpha':0.6, 'color':'#1f77b4'}, 
+            line_kws={'color':'red', 'linewidth':2})
+
+plt.title('Exploratory Analysis: Horsepower vs Car Price')
+plt.xlabel('Horsepower')
+plt.ylabel('Price ($)')
+plt.grid(True, linestyle='--', alpha=0.5)
 plt.clf()
 
 X, y = df[['horsepower']], df["price"]
@@ -211,6 +218,7 @@ regressor = RandomForestRegressor(
     oob_score=True
 )
 
+#Random Forest Regression
 regressor.fit(X_train, y_train)
 print("Out-of-Bag Score:", regressor.oob_score_)
 
@@ -221,3 +229,110 @@ r2_1 = r2_score(y_test, y2_pred)
 print(f"R-squared: {r2_1:.4f}")
 print(f"MAE:      ${mae_2:.2f}")
 print(f"MSE: {mse_2:.2f}")
+
+"""
+Part C: Experimentation (VERY IMPORTANT for MSc)
+• Try different splits:
+o 70/30
+• Compare performance
+"""
+X_train70, X_test30, y_train70, y_test30 = train_test_split(X, y, test_size=0.3, random_state=42)
+lr_7030 = LinearRegression()
+lr_7030.fit(X_train70, y_train70)
+y_pred_lr30 = lr_7030.predict(X_test30)
+
+r2_lr30 = lr_7030.score(X_test30, y_test30)
+mae_lr30 = mean_absolute_error(y_test30, y_pred_lr30)
+mse_lr30 = mean_squared_error(y_test30, y_pred_lr30)
+
+rf_7030 = RandomForestRegressor(oob_score=True, random_state=42)
+rf_7030.fit(X_train70, y_train70)
+y_pred_rf30 = rf_7030.predict(X_test30)
+
+r2_rf30 = rf_7030.score(X_test30, y_test30)
+mae_rf30 = mean_absolute_error(y_test30, y_pred_rf30)
+mse_rf30 = mean_squared_error(y_test30, y_pred_rf30)
+oob_rf30 = rf_7030.oob_score_
+
+print("\n" + "="*70)
+print(f"{'METRIC':<15} | {'LR (80/20)':<12} | {'LR (70/30)':<12} || {'RF (80/20)':<12} | {'RF (70/30)':<12}")
+print("="*70)
+print(f"{'R² Score':<15} | {0.6700:<12.4f} | {r2_lr30:<12.4f} || {0.8041:<12.4f} | {r2_rf30:<12.4f}")
+print(f"{'MAE':<15} | ${4355.76:<11.2f} | ${mae_lr30:<11.2f} || ${2663.71:<11.2f} | ${mae_rf30:<11.2f}")
+print(f"{'MSE (Millions)':<15} | {36.98:<12.2f} | {mse_lr30/1e6:<12.2f} || {21.95:<12.2f} | {mse_rf30/1e6:<12.2f}")
+print(f"{'OOB Score':<15} | {'N/A':<12} | {'N/A':<12} || {0.7617:<12.4f} | {oob_rf30:<12.4f}")
+print("="*70)
+
+"""
+TASK 4: Classification Model
+Objective:
+Convert price into categories:
+• Low Price
+• Medium Price
+• High Price
+df['price-category'] = pd.qcut(df['price'], 3, labels=['Low','Medium','High'])
+Build Classification Model:
+Use :
+• Logistic Regression
+Evaluate using:
+• Accuracy
+• Confusion Matrix
+"""
+df['price-category'] = pd.qcut(df['price'], 3, labels=['Low','Medium','High'])
+
+X_class = df[['horsepower']]
+y_class = df['price-category']
+
+X_train_c, X_test_c, y_train_c, y_test_c = train_test_split(X_class, y_class, test_size=0.2, random_state=42)
+classifier = LogisticRegression(max_iter=1000, random_state=42)
+classifier.fit(X_train_c, y_train_c)
+
+y_pred_c = classifier.predict(X_test_c)
+
+accuracy = accuracy_score(y_test_c, y_pred_c)
+conf_matrix = confusion_matrix(y_test_c, y_pred_c, labels=['Low', 'Medium', 'High'])
+
+print("classification results")
+print(f"Accuracy Score: {accuracy:.4f}\n")
+print("Confusion Matrix:")
+print(conf_matrix)
+
+plt.figure(figsize=(6, 5))
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues',
+            xticklabels=['Low', 'Medium', 'High'],
+            yticklabels=['Low', 'Medium', 'High'])
+
+plt.title('Logistic Regression: Confusion Matrix Heatmap', fontsize=12, pad=15)
+plt.xlabel('Predicted Category', fontsize=10)
+plt.ylabel('Actual Category', fontsize=10)
+plt.tight_layout()
+plt.clf()
+
+"""
+TASK 5: Model Evaluation & Visualization
+Requirements:
+• Plot:
+o Actual vs Predicted prices
+"""
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5), sharex=True, sharey=True)
+ideal_line = [df['price'].min(), df['price'].max()]
+
+#linear regreesion
+ax1.scatter(y_test, y_pred, alpha=0.6, color='#1f77b4', edgecolors='k')
+ax1.plot(ideal_line, ideal_line, color='red', linestyle='--', linewidth=2, label='Perfect Prediction')
+ax1.set_title('Linear Regression: Actual vs Predicted', fontsize=12)
+ax1.set_xlabel('Actual Price ($)', fontsize=10)
+ax1.set_ylabel('Predicted Price ($)', fontsize=10)
+ax1.grid(True, linestyle='--', alpha=0.5)
+ax1.legend()
+
+# random forest
+ax2.scatter(y_test, y2_pred, alpha=0.6, color='#2ca02c', edgecolors='k')
+ax2.plot(ideal_line, ideal_line, color='red', linestyle='--', linewidth=2, label='Perfect Prediction')
+ax2.set_title('Random Forest: Actual vs Predicted', fontsize=12)
+ax2.set_xlabel('Actual Price ($)', fontsize=10)
+ax2.grid(True, linestyle='--', alpha=0.5)
+ax2.legend()
+
+plt.tight_layout()
+plt.show()
